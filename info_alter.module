@@ -2,6 +2,7 @@
 /**
  * @file
  * A module to alter the site information form
+ *
  */
 
 /**
@@ -88,3 +89,7 @@ function info_alter_site_api_key_submit($form, &$form_state) {
 
 
 
+/**
+ * Resources: Drupal.org
+ * The test took me close to 2 hours
+ */
