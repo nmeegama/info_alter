@@ -1,0 +1,90 @@
+<?php
+/**
+ * @file
+ * A module to alter the site information form
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function info_alter_menu() {
+  $items = array();
+  $items['page_json'] = array(
+    'title' => 'Page node JSON',
+    'description' => 'Returns a page node in JSON format.',
+    'page callback' => 'info_alter_get_page_json',
+    'page arguments' => array(1, 2),
+    'access callback' => 'info_alter_page_json_access',
+    'access arguments' => array(1, 2),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * A callback function to return the
+ * page node in Json format
+ */
+function info_alter_get_page_json($api_key, $node_id) {
+
+  return json_encode(node_load($node_id));
+}
+
+/**
+ * A access callback for page_json menu
+ */
+function info_alter_page_json_access($api_key, $node_id) {
+  $access = true;
+  //get the site api key
+  $site_api_key = variable_get('siteapikey');
+
+  //if the key in th argument is not the site api key then 403
+  if($api_key != $site_api_key) {
+    $access = false;
+  }
+
+  $node = node_load($node_id);
+  //If the node id is not page node or if it is invalid then 403
+  if(!$node || $node->type != 'page') {
+    $access = false;
+  }
+
+  return $access;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function info_alter_form_alter(&$form, &$form_state, $form_id) {
+
+  if($form_id == 'system_site_information_settings') {
+    $form['site_keys'] = array(
+      '#title' => t('Site Keys'),
+      '#type' => 'fieldset',
+    );
+
+    $form['site_keys']['site_api_key'] = array(
+      '#title' => t('Site API Key'),
+      '#type' => 'textfield',
+      '#default_value' => variable_get('siteapikey', 'No API Key yet'),
+    );
+    $form['#submit'][] = 'info_alter_site_api_key_submit';
+    $form['actions']['submit']['#value'] = 'Update Configuration';
+  }
+}
+
+/**
+ * A submit handler for the site information settings form
+ * @param $form
+ * @param $form_state
+ *
+ */
+function info_alter_site_api_key_submit($form, &$form_state) {
+  $api_key = $form_state['values']['site_api_key'];
+  variable_set('siteapikey', $api_key);
+  drupal_set_message('The Site API Key has been saved with vale : '.$api_key);
+}
+
+
+
